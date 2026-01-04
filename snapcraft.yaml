@@ -1,0 +1,140 @@
+name: minigalaxy
+base: core24
+version: 1.4.0
+platforms:
+  amd64:
+    build-on: [amd64]
+    build-for: [amd64]
+summary: A simple GOG client for Linux
+description: |
+ Minigalaxy lets you download, install and play your GOG Linux games without getting in your way. 
+grade: stable
+confinement: strict
+compression: lzo
+icon: minigalaxy.png
+
+apps:
+  minigalaxy:
+    command: usr/games/minigalaxy
+    desktop: usr/share/applications/io.github.sharkwouter.Minigalaxy.desktop
+    common-id: io.github.sharkwouter.Minigalaxy
+    environment:
+      PYTHONPATH: $SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
+      PATH: $SNAP/usr/games:$SNAP/opt/wine-staging/bin:$PATH
+    extensions: [gnome]
+    plugs:
+      - audio-playback
+      - unity7
+      - network
+      - network-bind
+      - network-status
+      - screen-inhibit-control
+      - home
+      - removable-media
+      - mount-observe
+      - joystick
+      - bluez
+      - udisks2
+
+plugs:
+  shared-memory:
+    private: true
+
+environment:
+  LD_LIBRARY_PATH: $SNAP/usr/lib/i386-linux-gnu:$SNAP/usr/lib/i386-linux-gnu/pulseaudio:$LD_LIBRARY_PATH
+
+layout:
+  /usr/lib/x86_64-linux-gnu/mangohud:
+    symlink: $SNAP/usr/lib/x86_64-linux-gnu/mangohud
+
+package-repositories:
+  - type: apt
+    url: https://dl.winehq.org/wine-builds/ubuntu
+    suites: [noble]
+    components: [main]
+    architectures: [amd64, i386]
+    key-id: D43F640145369C51D786DDEA76F1A20FF987672F
+
+lint:
+  # Snapcraft's `ldd` lint can't handle 32-bit things,
+  # So just make it quiet and also make builds a surprising amount faster
+  ignore:
+    - library:
+        - lib/i386-linux-gnu/**
+        - usr/lib/i386-linux-gnu/**
+        - lib32/**
+        - usr/lib32/**
+        - opt/wine-staging/lib/wine/i386-unix/**
+
+parts:
+  minigalaxy-app:
+    plugin: dump
+    source: https://github.com/sharkwouter/minigalaxy/releases/download/$SNAPCRAFT_PROJECT_VERSION/minigalaxy_$SNAPCRAFT_PROJECT_VERSION_all.deb
+    override-build: |
+      craftctl default
+      sed -i 's|Name=Minigalaxy|Name=Minigalaxy [NyKyu]|' $CRAFT_PART_INSTALL/usr/share/applications/io.github.sharkwouter.Minigalaxy.desktop
+
+  base-dependencies:
+    after: [minigalaxy-app]
+    plugin: nil
+    stage-packages: [python3-requests, unzip, unrar-free]
+
+  wine:
+    plugin: nil
+    stage-packages: [winehq-staging, winetricks]
+
+  gamemode:
+    plugin: nil
+    stage-packages: [gamemode, gamemode-daemon, libgamemode0, libgamemodeauto0]
+    prime:
+      - etc/security/limits.d/10-gamemode.conf
+      - usr/bin/gamemoded
+      - usr/games/gamemodelist
+      - usr/games/gamemoderun
+      - usr/games/gamemode-simulate-game
+      - usr/lib/*/libgamemode.so*
+      - usr/lib/*/libgamemodeauto.so*
+      - usr/lib/*/libinih.so*
+      - usr/lib/systemd/user/gamemoded.service
+      - usr/lib/sysusers.d/gamemode.conf
+      - usr/libexec/cpucorectl
+      - usr/libexec/cpugovctl
+      - usr/libexec/gpuclockctl
+      - usr/libexec/procsysctl
+      - usr/share/dbus-1/services/com.feralinteractive.GameMode.service
+      - usr/share/gamemode/gamemode.ini
+      - usr/share/lintian/overrides/libgamemode0
+      - usr/share/metainfo/io.github.feralinteractive.gamemode.metainfo.xml
+      - usr/share/polkit-1/actions/com.feralinteractive.GameMode.policy
+      - usr/share/polkit-1/rules.d/gamemode.rules
+
+  mangohud:
+    plugin: nil
+    stage-packages: [mangohud, libspdlog1.12, libfmt9]
+    prime:
+      - usr/bin/mangohud
+      - usr/lib/x86_64-linux-gnu/mangohud/libMangoHud.so*
+      - usr/lib/x86_64-linux-gnu/mangohud/libMangoHud_opengl.so*
+      - usr/lib/x86_64-linux-gnu/mangohud/libMangoHud_shim.so*
+      - usr/lib/x86_64-linux-gnu/libspdlog.so*
+      - usr/lib/x86_64-linux-gnu/libfmt.so*
+      - usr/share/metainfo/io.github.flightlessmango.mangohud.metainfo.xml
+      - usr/share/vulkan/implicit_layer.d/MangoHud.x86_64.json
+
+  cleanup:
+    after: [minigalaxy-app, base-dependencies, wine, gamemode, mangohud]
+    plugin: nil
+    build-snaps:
+      - mesa-2404
+      - gnome-46-2404
+    override-prime: |
+      set -eux
+      cd /snap/mesa-2404/current/usr/lib
+      find . -type f,l -exec rm -f $CRAFT_PRIME/usr/lib/{} \;
+      cd /snap/mesa-2404/current/usr/share
+      find . -type f,l -exec rm -f $CRAFT_PRIME/usr/share/{} \;
+
+      cd /snap/gnome-46-2404/current/usr/lib
+      find . -type f,l -exec rm -f $CRAFT_PRIME/usr/lib/{} \;
+      cd /snap/gnome-46-2404/current/usr/share
+      find . -type f,l -exec rm -f $CRAFT_PRIME/usr/share/{} \;
