@@ -19,6 +19,7 @@ apps:
     desktop: usr/share/applications/io.github.sharkwouter.Minigalaxy.desktop
     common-id: io.github.sharkwouter.Minigalaxy
     environment:
+      HOME: $SNAP_REAL_HOME
       PYTHONPATH: $SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
       PATH: $SNAP/usr/games:$SNAP/opt/wine-staging/bin:$PATH
     extensions: [gnome]
