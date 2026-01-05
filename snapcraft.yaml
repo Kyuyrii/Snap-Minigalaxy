@@ -42,31 +42,17 @@ plugs:
   shared-memory:
     private: true
 
-environment:
-  LD_LIBRARY_PATH: $SNAP/usr/lib/i386-linux-gnu:$SNAP/usr/lib/i386-linux-gnu/pulseaudio:$LD_LIBRARY_PATH
-
 layout:
   /usr/lib/x86_64-linux-gnu/mangohud:
     symlink: $SNAP/usr/lib/x86_64-linux-gnu/mangohud
 
-package-repositories:
-  - type: apt
-    url: https://dl.winehq.org/wine-builds/ubuntu
-    suites: [noble]
-    components: [main]
-    architectures: [amd64, i386]
-    key-id: D43F640145369C51D786DDEA76F1A20FF987672F
-
-lint:
-  # Snapcraft's `ldd` lint can't handle 32-bit things,
-  # So just make it quiet and also make builds a surprising amount faster
-  ignore:
-    - library:
-        - lib/i386-linux-gnu/**
-        - usr/lib/i386-linux-gnu/**
-        - lib32/**
-        - usr/lib32/**
-        - opt/wine-staging/lib/wine/i386-unix/**
+#package-repositories:
+#  - type: apt
+#    url: https://dl.winehq.org/wine-builds/ubuntu
+#    suites: [resolute]
+#    components: [main]
+#    architectures: [amd64]
+#    key-id: D43F640145369C51D786DDEA76F1A20FF987672F
 
 parts:
   minigalaxy-app:
@@ -81,10 +67,6 @@ parts:
     plugin: nil
     stage-packages: [python3-requests, unzip, unrar-free]
 
-  wine:
-    plugin: nil
-    stage-packages: [winehq-staging, winetricks]
-
   gamemode:
     plugin: nil
     stage-packages: [gamemode, gamemode-daemon, libgamemode0, libgamemodeauto0]
@@ -94,9 +76,9 @@ parts:
       - usr/games/gamemodelist
       - usr/games/gamemoderun
       - usr/games/gamemode-simulate-game
-      - usr/lib/*/libgamemode.so*
-      - usr/lib/*/libgamemodeauto.so*
-      - usr/lib/*/libinih.so*
+      - usr/lib/x86_64-linux-gnu/libgamemode.so*
+      - usr/lib/x86_64-linux-gnu/libgamemodeauto.so*
+      - usr/lib/x86_64-linux-gnu/libinih.so*
       - usr/lib/systemd/user/gamemoded.service
       - usr/lib/sysusers.d/gamemode.conf
       - usr/libexec/cpucorectl
@@ -123,8 +105,12 @@ parts:
       - usr/share/metainfo/io.github.flightlessmango.mangohud.metainfo.xml
       - usr/share/vulkan/implicit_layer.d/MangoHud.x86_64.json
 
+#  wine:
+#    plugin: nil
+#    stage-packages: [winehq-staging, winetricks]
+
   cleanup:
-    after: [minigalaxy-app, base-dependencies, wine, gamemode, mangohud]
+    after: [minigalaxy-app, base-dependencies, gamemode, mangohud] #, wine]
     plugin: nil
     build-snaps:
       - mesa-2404
