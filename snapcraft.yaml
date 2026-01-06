@@ -22,6 +22,7 @@ apps:
       HOME: $SNAP_REAL_HOME
       PYTHONPATH: $SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
       PATH: $SNAP/usr/games:$SNAP/opt/wine-staging/bin:$PATH
+      LD_LIBRARY_PATH: $SNAP/wine-kyu/usr/lib/i386-linux-gnu:$SNAP/wine-kyu/usr/lib/i386-linux-gnu/pulseaudio:$SNAP/wine-kyu/usr/lib/x86_64-linux-gnu:$SNAP/wine-kyu/usr/lib/x86_64-linux-gnu/pulseaudio:$LD_LIBRARY_PATH
     extensions: [gnome]
     plugs:
       - audio-playback
@@ -41,10 +42,19 @@ apps:
 plugs:
   shared-memory:
     private: true
+  wine-kyu:
+    content: wine-kyu
+    interface: content
+    target: $SNAP/wine-kyu
+    default-provider: wine-kyu
 
 layout:
   /usr/lib/x86_64-linux-gnu/mangohud:
     symlink: $SNAP/usr/lib/x86_64-linux-gnu/mangohud
+  /opt/wine-staging:
+    symlink: $SNAP/wine-kyu/opt/wine-staging
+  /usr/bin/wine:
+    symlink: $SNAP/wine-kyu/opt/wine-staging/bin/wine
 
 #package-repositories:
 #  - type: apt
@@ -104,6 +114,10 @@ parts:
       - usr/lib/x86_64-linux-gnu/libfmt.so*
       - usr/share/metainfo/io.github.flightlessmango.mangohud.metainfo.xml
       - usr/share/vulkan/implicit_layer.d/MangoHud.x86_64.json
+
+  sdl2:
+    plugin: nil
+    stage-packages: [libsdl2-2.0-0, libdecor-0-0, libsamplerate0]
 
 #  wine:
 #    plugin: nil
