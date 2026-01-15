@@ -21,8 +21,8 @@ apps:
     environment:
       HOME: $SNAP_REAL_HOME
       PYTHONPATH: $SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
-      PATH: $SNAP/usr/games:$SNAP/opt/wine-staging/bin:$PATH
-      LD_LIBRARY_PATH: $SNAP/wine-kyu/usr/lib/i386-linux-gnu:$SNAP/wine-kyu/usr/lib/i386-linux-gnu/pulseaudio:$SNAP/wine-kyu/usr/lib/x86_64-linux-gnu:$SNAP/wine-kyu/usr/lib/x86_64-linux-gnu/pulseaudio:$LD_LIBRARY_PATH
+      PATH: $SNAP/usr/games:$SNAP/opt/wine-stable/bin:$PATH
+      LD_LIBRARY_PATH: $SNAP/opt/wine-stable/lib/wine/i386-unix:$SNAP/wine-kyu/usr/lib/i386-linux-gnu:$SNAP/wine-kyu/usr/lib/i386-linux-gnu/pulseaudio:$SNAP/opt/wine-stable/lib/wine/x86_64-unix:$SNAP/wine-kyu/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
     extensions: [gnome]
     plugs:
       - audio-playback
@@ -51,10 +51,10 @@ plugs:
 layout:
   /usr/lib/x86_64-linux-gnu/mangohud:
     symlink: $SNAP/usr/lib/x86_64-linux-gnu/mangohud
-  /opt/wine-staging:
-    symlink: $SNAP/wine-kyu/opt/wine-staging
+  /opt/wine-stable:
+    symlink: $SNAP/wine-kyu/opt/wine-stable
   /usr/bin/wine:
-    symlink: $SNAP/wine-kyu/opt/wine-staging/bin/wine
+    symlink: $SNAP/wine-kyu/opt/wine-stable/bin/wine
 
 #package-repositories:
 #  - type: apt
@@ -121,7 +121,7 @@ parts:
 
 #  wine:
 #    plugin: nil
-#    stage-packages: [winehq-staging, winetricks]
+#    stage-packages: [winehq-stable, winetricks]
 
   cleanup:
     after: [minigalaxy-app, base-dependencies, gamemode, mangohud] #, wine]
