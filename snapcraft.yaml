@@ -15,6 +15,9 @@ icon: minigalaxy.png
 
 apps:
   minigalaxy:
+    command-chain:
+      - snap/command-chain/gpu-2404-wrapper
+      - snap/command-chain/desktop-launch
     command: usr/games/minigalaxy
     desktop: usr/share/applications/io.github.sharkwouter.Minigalaxy.desktop
     common-id: io.github.sharkwouter.Minigalaxy
@@ -23,10 +26,14 @@ apps:
       PYTHONPATH: $SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
       PATH: $SNAP/usr/games:$SNAP/opt/wine-stable/bin:$PATH
       LD_LIBRARY_PATH: $SNAP/opt/wine-stable/lib/wine/i386-unix:$SNAP/wine-kyu/usr/lib/i386-linux-gnu:$SNAP/wine-kyu/usr/lib/i386-linux-gnu/pulseaudio:$SNAP/opt/wine-stable/lib/wine/x86_64-unix:$SNAP/wine-kyu/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
-    extensions: [gnome]
     plugs:
+      - desktop
+      - desktop-legacy
+      - gsettings
+      - opengl
+      - wayland
+      - x11
       - audio-playback
-      - unity7
       - network
       - network-bind
       - network-status
@@ -37,11 +44,36 @@ apps:
       - system-observe
       - joystick
       - bluez
-      - udisks2
+
+environment:
+  SNAP_DESKTOP_RUNTIME: $SNAP/gnome-platform
+  GTK_USE_PORTAL: '1'
 
 plugs:
   shared-memory:
     private: true
+  desktop:
+    mount-host-font-cache: false
+  gtk-3-themes:
+    interface: content
+    target: $SNAP/data-dir/themes
+    default-provider: gtk-common-themes
+  icon-themes:
+    interface: content
+    target: $SNAP/data-dir/icons
+    default-provider: gtk-common-themes
+  sound-themes:
+    interface: content
+    target: $SNAP/data-dir/sounds
+    default-provider: gtk-common-themes
+  gnome-46-2404:
+    interface: content
+    target: $SNAP/gnome-platform
+    default-provider: gnome-46-2404
+  gpu-2404:
+    interface: content
+    target: $SNAP/gpu-2404
+    default-provider: mesa-2404
   wine-kyu:
     content: wine-kyu
     interface: content
@@ -49,12 +81,29 @@ plugs:
     default-provider: wine-kyu
 
 layout:
+  /usr/lib/x86_64-linux-gnu/webkit2gtk-4.0:
+    symlink: $SNAP/gnome-platform/usr/lib/x86_64-linux-gnu/webkit2gtk-4.0
+  /usr/lib/x86_64-linux-gnu/webkit2gtk-4.1:
+    symlink: $SNAP/gnome-platform/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1
+  /usr/share/xml/iso-codes:
+    bind: $SNAP/gnome-platform/usr/share/xml/iso-codes
+  /usr/share/libdrm:
+    bind: $SNAP/gpu-2404/libdrm
+  /usr/share/drirc.d:
+    symlink: $SNAP/gpu-2404/drirc.d
+  /usr/share/X11/XErrorDB:
+    symlink: $SNAP/gpu-2404/X11/XErrorDB
   /usr/lib/x86_64-linux-gnu/mangohud:
     symlink: $SNAP/usr/lib/x86_64-linux-gnu/mangohud
   /opt/wine-stable:
     symlink: $SNAP/wine-kyu/opt/wine-stable
   /usr/bin/wine:
     symlink: $SNAP/wine-kyu/opt/wine-stable/bin/wine
+
+hooks:
+  configure:
+    command-chain:
+      - snap/command-chain/hooks-configure-fonts
 
 #package-repositories:
 #  - type: apt
@@ -140,3 +189,12 @@ parts:
       find . -type f,l -exec rm -f $CRAFT_PRIME/usr/lib/{} \;
       cd /snap/gnome-46-2404/current/usr/share
       find . -type f,l -exec rm -f $CRAFT_PRIME/usr/share/{} \;
+
+  command-chain:
+    after: [cleanup]
+    plugin: dump
+    source: .
+    organize:
+      command-chain: snap/command-chain
+    prime:
+      - snap
