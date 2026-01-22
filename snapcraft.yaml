@@ -1,6 +1,6 @@
 name: minigalaxy
 base: core24
-version: 1.4.0
+version: 1.4.1
 platforms:
   amd64:
     build-on: [amd64]
