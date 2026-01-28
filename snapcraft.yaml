@@ -18,7 +18,7 @@ apps:
     command-chain:
       - snap/command-chain/gpu-2404-wrapper
       - snap/command-chain/desktop-launch
-    command: usr/games/minigalaxy
+    command: snap/command-chain/request-joystick-plug
     desktop: usr/share/applications/io.github.sharkwouter.Minigalaxy.desktop
     common-id: io.github.sharkwouter.Minigalaxy
     environment:
@@ -168,12 +168,17 @@ parts:
     plugin: nil
     stage-packages: [libsdl2-2.0-0, libdecor-0-0, libsamplerate0]
 
+  zenity:
+    plugin: nil
+    stage-packages: [zenity]
+    prime: [usr/bin/zenity]
+
 #  wine:
 #    plugin: nil
 #    stage-packages: [winehq-stable, winetricks]
 
   cleanup:
-    after: [minigalaxy-app, base-dependencies, gamemode, mangohud] #, wine]
+    after: [minigalaxy-app, base-dependencies, gamemode, mangohud, zenity] #, wine]
     plugin: nil
     build-snaps:
       - mesa-2404

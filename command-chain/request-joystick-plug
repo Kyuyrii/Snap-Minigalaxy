@@ -1,0 +1,15 @@
+#!/bin/bash
+
+connect_text="
+To connect the interface, in a terminal run:
+
+<tt><b>sudo snap connect minigalaxy:joystick</b></tt>"
+
+if ! snapctl is-connected joystick; then
+    echo "joystick not connected, please connect with:"
+    echo "sudo snap connect minigalaxy:joystick"
+    zenity --title "Minigalaxy requires access to the joystick interface" --info --text "$connect_text" --width 600
+    exit 1
+fi
+
+exec "$SNAP/usr/games/minigalaxy" "$@"
