@@ -24,8 +24,7 @@ apps:
     environment:
       HOME: $SNAP_USER_COMMON
       PYTHONPATH: $SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
-      PATH: $SNAP/usr/games:$SNAP/opt/wine-stable/bin:$PATH
-      LD_LIBRARY_PATH: $SNAP/opt/wine-stable/lib/wine/i386-unix:$SNAP/wine-kyu/usr/lib/i386-linux-gnu:$SNAP/wine-kyu/usr/lib/i386-linux-gnu/pulseaudio:$SNAP/opt/wine-stable/lib/wine/x86_64-unix:$SNAP/wine-kyu/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+      PATH: $SNAP/usr/games:$PATH
     plugs:
       - desktop
       - desktop-legacy
@@ -42,6 +41,7 @@ apps:
       - removable-media
       - mount-observe
       - system-observe
+      - hardware-observe
       - joystick
       - bluez
 
@@ -74,11 +74,6 @@ plugs:
     interface: content
     target: $SNAP/gpu-2404
     default-provider: mesa-2404
-  wine-kyu:
-    content: wine-kyu
-    interface: content
-    target: $SNAP/wine-kyu
-    default-provider: wine-kyu
 
 layout:
   /usr/lib/x86_64-linux-gnu/webkit2gtk-4.0:
@@ -93,12 +88,13 @@ layout:
     symlink: $SNAP/gpu-2404/drirc.d
   /usr/share/X11/XErrorDB:
     symlink: $SNAP/gpu-2404/X11/XErrorDB
-  /usr/lib/x86_64-linux-gnu/mangohud:
-    symlink: $SNAP/usr/lib/x86_64-linux-gnu/mangohud
-  /opt/wine-stable:
-    symlink: $SNAP/wine-kyu/opt/wine-stable
-  /usr/bin/wine:
-    symlink: $SNAP/wine-kyu/opt/wine-stable/bin/wine
+  /usr/lib/mangohud:
+    symlink: $SNAP/usr/lib/mangohud
+
+lint:
+  ignore:
+    - library:
+        - usr/lib/mangohud/lib32/**
 
 hooks:
   configure:
@@ -124,43 +120,19 @@ parts:
   base-dependencies:
     after: [minigalaxy-app]
     plugin: nil
-    stage-packages: [python3-requests, unzip, unrar-free]
+    stage-packages: [python3-requests, unzip, unrar-free, wget]
 
   gamemode:
     plugin: nil
     stage-packages: [gamemode, gamemode-daemon, libgamemode0, libgamemodeauto0]
-    prime:
-      - etc/security/limits.d/10-gamemode.conf
-      - usr/bin/gamemoded
-      - usr/games/gamemodelist
-      - usr/games/gamemoderun
-      - usr/games/gamemode-simulate-game
-      - usr/lib/x86_64-linux-gnu/libgamemode.so*
-      - usr/lib/x86_64-linux-gnu/libgamemodeauto.so*
-      - usr/lib/x86_64-linux-gnu/libinih.so*
-      - usr/lib/systemd/user/gamemoded.service
-      - usr/lib/sysusers.d/gamemode.conf
-      - usr/libexec/cpucorectl
-      - usr/libexec/cpugovctl
-      - usr/libexec/gpuclockctl
-      - usr/libexec/procsysctl
-      - usr/share/dbus-1/services/com.feralinteractive.GameMode.service
-      - usr/share/gamemode/gamemode.ini
-      - usr/share/lintian/overrides/libgamemode0
-      - usr/share/metainfo/io.github.feralinteractive.gamemode.metainfo.xml
-      - usr/share/polkit-1/actions/com.feralinteractive.GameMode.policy
-      - usr/share/polkit-1/rules.d/gamemode.rules
 
   mangohud:
-    plugin: nil
-    stage-packages: [mangohud, libspdlog1.12, libfmt9]
-    prime:
-      - usr/bin/mangohud
-      - usr/lib/x86_64-linux-gnu/mangohud
-      - usr/lib/x86_64-linux-gnu/libspdlog.so*
-      - usr/lib/x86_64-linux-gnu/libfmt.so*
-      - usr/share/metainfo/io.github.flightlessmango.mangohud.metainfo.xml
-      - usr/share/vulkan/implicit_layer.d/MangoHud.x86_64.json
+    plugin: dump
+    source: https://github.com/flightlessmango/MangoHud/releases/download/v0.8.2/MangoHud-0.8.2.r0.ga37b007.tar.gz
+    override-build: |
+      craftctl default
+      tar -xvf MangoHud-package.tar -C $CRAFT_PART_INSTALL
+    prime: [usr]
 
   sdl2:
     plugin: nil
@@ -173,7 +145,7 @@ parts:
 
 #  wine:
 #    plugin: nil
-#    stage-packages: [winehq-stable, winetricks]
+#    stage-packages: [winehq-stable]
 
   cleanup:
     after: [minigalaxy-app, base-dependencies, gamemode, mangohud, zenity] #, wine]
@@ -196,8 +168,22 @@ parts:
   command-chain:
     after: [cleanup]
     plugin: dump
-    source: .
+    source: ./other-files
+
+  wine-kron4ek:
+    after: [command-chain]
+    plugin: dump
+    source: https://github.com/Kron4ek/Wine-Builds/releases/download/11.5/wine-11.5-amd64-wow64.tar.xz
     organize:
-      command-chain: snap/command-chain
-    prime:
-      - snap
+      bin: usr/bin
+      include: usr/include
+      lib: usr/lib
+      share: usr/share
+
+  winetricks:
+    after: [wine-kron4ek]
+    plugin: make
+    source: https://github.com/Winetricks/winetricks.git
+    source-tag: 20260125
+    make-parameters:
+      - PREFIX=/usr
